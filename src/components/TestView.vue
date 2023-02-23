@@ -30,14 +30,14 @@
       @click="showParams"
       style="position: absolute; top: 5px; right: 55px; z-index: 99999"
       class="btn btn-light"
-    >
+    ><span style="margin-bottom:-5px;margin-right:5px;">Settings</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="16"
         height="16"
         fill="currentColor"
         class="bi bi-gear"
-        viewBox="0 0 16 16"
+        viewBox="0 0 18 19"
       >
         <path
           d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"
@@ -47,10 +47,33 @@
         />
       </svg>
     </button>
+
+    <button
+      type="button"
+      @click="setZeroScale"
+      style="position: absolute; top: 5px; right: 170px; z-index: 99999"
+      class="btn btn-primary"
+    ><span style="margin-bottom:-5px;margin-right:5px;">Zero Scale</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-0-circle"
+        viewBox="0 0 18 19"
+      >
+        <path
+          d="M7.988 12.158c-1.851 0-2.941-1.57-2.941-3.99V7.84c0-2.408 1.101-3.996 2.965-3.996 1.857 0 2.935 1.57 2.935 3.996v.328c0 2.408-1.101 3.99-2.959 3.99ZM8 4.951c-1.008 0-1.629 1.09-1.629 2.895v.31c0 1.81.627 2.895 1.629 2.895s1.623-1.09 1.623-2.895v-.31c0-1.8-.621-2.895-1.623-2.895Z"
+        />
+        <path
+          d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0ZM1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8Z"
+        />
+      </svg>
+    </button>
     <!-- end of absolute components -->
     <div class="row" style="margin-top: 10px">
       <div class="col text-center" style="padding: 20px; z-index: 10000">
-        <input type="number" v-model="leftVal" style="display: none" />
+        <!-- <input type="number" v-model="leftVal" /> -->
         <VueSvgGauge
           :start-angle="-110"
           :end-angle="110"
@@ -58,12 +81,12 @@
           :separator-step="0"
           :min="0"
           :max="500"
-          :transition-duration="300"
+          :transition-duration="0"
           :gauge-color="[
-            { offset: 0, color: '#ff0000' },
-            { offset: 100, color: '#00ff00' },
+            { offset: 0, color: '#00ff00' },
+            { offset: 100, color: '#ff0000' },
           ]"
-          :scale-interval="0.2"
+          :scale-interval="0"
         >
           <div class="inner-text">
             {{ leftNewton.toFixed(1) }} <span style="font-size: small">N</span>
@@ -77,7 +100,7 @@
         </div>
       </div>
       <div class="col text-center" style="padding: 20px; z-index: 10000">
-        <input type="number" v-model="rightVal" style="display: none" />
+        <!-- <input type="number" v-model="rightVal"  /> -->
         <VueSvgGauge
           :start-angle="-110"
           :end-angle="110"
@@ -85,12 +108,12 @@
           :separator-step="0"
           :min="0"
           :max="500"
-          :transition-duration="300"
+          :transition-duration="0"
           :gauge-color="[
-            { offset: 0, color: '#ff0000' },
-            { offset: 100, color: '#00ff00' },
+            { offset: 0, color: '#00ff00' },
+            { offset: 100, color: '#ff0000' },
           ]"
-          :scale-interval="0.2"
+          :scale-interval="0"
         >
           <div class="inner-text">
             {{ rightNewton.toFixed(1) }} <span style="font-size: small">N</span>
@@ -195,6 +218,13 @@ export default {
         console.log(error);
       }
     },
+    async setZeroScale() {
+      try {
+        await axios.post("http://127.0.0.1:1880/zero", {});
+      } catch (error) {
+        console.log(error);
+      }
+    },
     async requestStation() {
       try {
         const self = this;
@@ -204,7 +234,7 @@ export default {
           );
           self.leftVal = parseInt(response?.data?.cell_1);
           self.rightVal = parseInt(response?.data?.cell_2);
-        }, 200);
+        }, 120);
       } catch (error) {
         console.log(error);
       }
@@ -257,44 +287,79 @@ export default {
 
       let ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.beginPath();
 
-      // calc limit x
-      let limitX = 0;
-      for (let i = 0; i < canvas.width; i++) {
-        const calcY = Math.sin((i * Math.PI) / 180) * angle;
-        if (calcY >= 0) limitX = i;
-        else break;
-      }
+      // calc arc variables
+      var arcStartPoint = 40;
+      var arcEndPoint = 280 - angle;
+      var arcTopPoint = 60 - angle;
+      var arcControlPointX = arcStartPoint + (arcEndPoint - arcStartPoint) / 2;
 
       // draw outer pipe
-      for (let i = 0; i <= limitX; i++) {
-        const calcY = Math.sin((i * Math.PI) / 180) * angle;
-        if (calcY >= 0) {
-          ctx.lineWidth = 10;
-          ctx.strokeStyle = pipeColor;
-          ctx.lineTo(
-            i + (canvas.width - limitX) / 2,
-            canvas.height - Math.sin((i * Math.PI) / 180) * angle - 20
-          );
-        } else break;
-      }
+      ctx.beginPath();
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = pipeColor;
+      ctx.moveTo(arcStartPoint, 100);
+      ctx.bezierCurveTo(
+        arcControlPointX,
+        arcTopPoint,
+        arcControlPointX,
+        arcTopPoint,
+        arcEndPoint,
+        100
+      );
       ctx.stroke();
 
       // draw inner pipe
       ctx.beginPath();
-      for (let i = 0; i <= limitX; i++) {
-        const calcY = Math.sin((i * Math.PI) / 180) * angle;
-        if (calcY >= 0) {
-          ctx.lineWidth = 6;
-          ctx.strokeStyle = "#000";
-          ctx.lineTo(
-            i + (canvas.width - limitX) / 2,
-            canvas.height - Math.sin((i * Math.PI) / 180) * angle - 20
-          );
-        } else break;
-      }
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#000";
+      ctx.moveTo(arcStartPoint, 100);
+      ctx.bezierCurveTo(
+        arcControlPointX,
+        arcTopPoint,
+        arcControlPointX,
+        arcTopPoint,
+        arcEndPoint,
+        100
+      );
       ctx.stroke();
+
+      // calc limit x
+      // let limitX = 0;
+      // for (let i = 0; i < canvas.width; i++) {
+      //   const calcY = Math.sin((i * Math.PI) / 180) * angle;
+      //   if (calcY >= 0) limitX = i;
+      //   else break;
+      // }
+
+      // draw outer pipe
+      // for (let i = 0; i <= limitX; i++) {
+      //   const calcY = Math.sin((i * Math.PI) / 180) * angle;
+      //   if (calcY >= 0) {
+      //     ctx.lineWidth = 10;
+      //     ctx.strokeStyle = pipeColor;
+      //     ctx.lineTo(
+      //       i + (canvas.width - limitX) / 2,
+      //       canvas.height - Math.sin((i * Math.PI) / 180) * angle - 20
+      //     );
+      //   } else break;
+      // }
+      // ctx.stroke();
+
+      // draw inner pipe
+      // ctx.beginPath();
+      // for (let i = 0; i <= limitX; i++) {
+      //   const calcY = Math.sin((i * Math.PI) / 180) * angle;
+      //   if (calcY >= 0) {
+      //     ctx.lineWidth = 6;
+      //     ctx.strokeStyle = "#000";
+      //     ctx.lineTo(
+      //       i + (canvas.width - limitX) / 2,
+      //       canvas.height - Math.sin((i * Math.PI) / 180) * angle - 20
+      //     );
+      //   } else break;
+      // }
+      // ctx.stroke();
 
       // draw torsion percentage
       if (isNaN(pipeTorsion) || pipeTorsion < 0) pipeTorsion = 0.0;
@@ -303,7 +368,7 @@ export default {
 
       ctx.fillText(
         "% " + parseInt(pipeTorsion).toString(),
-        canvas.width / 2 - 15,
+        arcStartPoint + ((arcEndPoint - arcStartPoint) / 2) - 15,
         canvas.height - 18
       );
     },
@@ -314,10 +379,11 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .inner-text {
-  margin-top: 75px;
-  font-size: x-large;
+  margin-top: 65px;
+  font-size: xx-large;
   height: 100%;
   width: 100%;
+  text-shadow: 1px 2px 7px rgba(0, 0, 0, 1);
 }
 
 .brand-left {

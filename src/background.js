@@ -1,6 +1,6 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, ipcMain } from "electron";
+import { app, protocol, BrowserWindow, ipcMain, Menu } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import Store from "electron-store";
@@ -43,6 +43,7 @@ async function createWindow() {
     },
   });
 
+  Menu.setApplicationMenu(null);
   win.setMenu(null);
   win.maximize();
 
@@ -67,7 +68,7 @@ async function createWindow() {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
     // await image.loadURL(process.env.WEBPACK_DEV_SERVER_URL + "/#/image");
-    if (!process.env.IS_TEST) win.webContents.openDevTools();
+    // if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
     createProtocol("app");
     // Load the index.html when not in development
