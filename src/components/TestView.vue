@@ -79,8 +79,8 @@
           :end-angle="110"
           :value="leftNewton"
           :separator-step="0"
-          :min="0"
-          :max="500"
+          :min="stationParams.Multiplier1"
+          :max="stationParams.Multiplier2"
           :transition-duration="0"
           :gauge-color="[
             { offset: 0, color: '#00ff00' },
@@ -106,8 +106,8 @@
           :end-angle="110"
           :value="rightNewton"
           :separator-step="0"
-          :min="0"
-          :max="500"
+          :min="stationParams.Multiplier1"
+          :max="stationParams.Multiplier2"
           :transition-duration="0"
           :gauge-color="[
             { offset: 0, color: '#00ff00' },
@@ -137,7 +137,7 @@
       >
         &nbsp;
       </div>
-      <div class="row">
+      <div class="row" style="margin-top:100px;">
         <div class="col text-center">
           <canvas id="cnvLeft" style="width: 80%"></canvas>
         </div>
@@ -161,7 +161,7 @@ const axios = require("axios");
 const spawn = require("child_process").spawn;
 
 import { VueSvgGauge } from "vue-svg-gauge";
-import Store from "electron-store";
+// import Store from "electron-store";
 
 export default {
   name: "HelloWorld",
@@ -172,7 +172,7 @@ export default {
       leftPercent: 0,
       rightPercent: 0,
       leftNewton: 0,
-      stationId: 0,
+      stationId: 2,
       rightNewton: 0,
       stationParams: {
         Display: "",
@@ -191,8 +191,8 @@ export default {
     msg: String,
   },
   async mounted() {
-    const store = new Store();
-    this.stationId = parseInt(store.get("station"));
+    // const store = new Store();
+    // this.stationId = parseInt(store.get("station"));
     await this.requestParams();
     this.requestStation();
     this.drawPipes();
@@ -234,7 +234,7 @@ export default {
           );
           self.leftVal = parseInt(response?.data?.cell_1);
           self.rightVal = parseInt(response?.data?.cell_2);
-        }, 120);
+        }, 60);
       } catch (error) {
         console.log(error);
       }
@@ -271,8 +271,8 @@ export default {
       this.leftNewton = isNaN(this.leftVal) ? 0 : this.leftVal * 9.81;
       this.rightNewton = isNaN(this.rightVal) ? 0 : this.rightVal * 9.81;
 
-      this.drawPipeByAngle(cnvLeft, parseInt(this.leftVal) + 25);
-      this.drawPipeByAngle(cnvRight, parseInt(this.rightVal) + 25);
+      this.drawPipeByAngle(cnvLeft, parseInt(this.leftVal * 2) + 25);
+      this.drawPipeByAngle(cnvRight, parseInt(this.rightVal * 2) + 25);
     },
     drawPipeByAngle(canvas, angle) {
       let pipeColor = "";
@@ -291,7 +291,7 @@ export default {
       // calc arc variables
       var arcStartPoint = 40;
       var arcEndPoint = 280 - angle;
-      var arcTopPoint = 60 - angle;
+      var arcTopPoint = 60 - angle * 0.5;
       var arcControlPointX = arcStartPoint + (arcEndPoint - arcStartPoint) / 2;
 
       // draw outer pipe
@@ -300,9 +300,9 @@ export default {
       ctx.strokeStyle = pipeColor;
       ctx.moveTo(arcStartPoint, 100);
       ctx.bezierCurveTo(
-        arcControlPointX,
+        arcControlPointX - 15,
         arcTopPoint,
-        arcControlPointX,
+        arcControlPointX + 15,
         arcTopPoint,
         arcEndPoint,
         100
@@ -315,9 +315,9 @@ export default {
       ctx.strokeStyle = "#000";
       ctx.moveTo(arcStartPoint, 100);
       ctx.bezierCurveTo(
-        arcControlPointX,
+        arcControlPointX - 15,
         arcTopPoint,
-        arcControlPointX,
+        arcControlPointX + 15,
         arcTopPoint,
         arcEndPoint,
         100
@@ -366,11 +366,11 @@ export default {
 
       ctx.font = "14px Arial";
 
-      ctx.fillText(
-        "% " + parseInt(pipeTorsion).toString(),
-        arcStartPoint + ((arcEndPoint - arcStartPoint) / 2) - 15,
-        canvas.height - 18
-      );
+      // ctx.fillText(
+      //   "% " + parseInt(pipeTorsion).toString(),
+      //   arcStartPoint + ((arcEndPoint - arcStartPoint) / 2) - 15,
+      //   canvas.height - 18
+      // );
     },
   },
 };

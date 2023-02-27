@@ -1,5 +1,6 @@
 "use strict";
 
+import electron from "electron";
 import { app, protocol, BrowserWindow, ipcMain, Menu } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
@@ -16,10 +17,38 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 async function createWindow() {
+  var mwX = 0;
+  var mwY = 0;
+  var mwWidth = 1920;
+  var mwHeight = 1080;
+
+  if (app.commandLine.hasSwitch("station")){
+    if (app.commandLine.hasSwitch("station")){
+      store.set("station", app.commandLine.getSwitchValue("station"));
+    }
+  }
+
+  if (app.commandLine.hasSwitch("monitor")) {
+    var monitor = app.commandLine.getSwitchValue("monitor");
+    if (monitor == "2") {
+      let displays = electron.screen.getAllDisplays();
+      let externalDisplay = displays.find((display) => {
+        return display.bounds.x !== 0 || display.bounds.y !== 0;
+      });
+
+      if (externalDisplay) {
+        mwX = 1920 + 60;
+        mwY = 0;
+      }
+    }
+  }
+
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    x: mwX,
+    y: mwY,
+    width: mwWidth,
+    height: mwHeight,
     fullscreen: true,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -45,7 +74,7 @@ async function createWindow() {
 
   Menu.setApplicationMenu(null);
   win.setMenu(null);
-  win.maximize();
+  // win.maximize();
 
   // win.webContents.setWindowOpenHandler(() => {
   //   return {
@@ -102,9 +131,6 @@ app.on("activate", () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
-  if (app.commandLine.hasSwitch("station")){
-    store.set("station", app.commandLine.getSwitchValue("station"));
-  }
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

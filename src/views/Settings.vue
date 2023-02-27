@@ -60,13 +60,13 @@
 <script>
 // @ is an alias to /src
 const axios = require("axios");
-import Store from "electron-store";
+// import Store from "electron-store";
 
 export default {
   name: "Settings",
   data() {
     return {
-      stationId: 0,
+      stationId: 2,
       formData: {
         Display: "",
         Multiplier1: null,
@@ -79,8 +79,8 @@ export default {
   },
   async mounted() {
     try {
-      const store = new Store();
-      this.stationId = parseInt(store.get("station"));
+      // const store = new Store();
+      // this.stationId = parseInt(store.get("station"));
       const response = await axios.get("http://127.0.0.1:1880/station?cell=" + this.stationId);
 
       if (response && response.data && response.data.length > 0) this.formData = response.data[0];
